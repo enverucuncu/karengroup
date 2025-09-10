@@ -1,0 +1,62 @@
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client { provider = "prisma-client-js" }
+
+model Product {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  coverUrl  String
+  photos    ProductMedia[]
+  titleTr   String
+  descTr    String
+  specsTr   String
+  translations ProductTranslation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductMedia {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductTranslation {
+  id        String  @id @default(cuid())
+  productId String
+  lang      String
+  title     String
+  desc      String
+  specs     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([productId, lang])
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  coverUrl  String
+  photos    ProjectMedia[]
+  titleTr   String
+  descTr    String
+  translations ProjectTranslation[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectMedia {
+  id        String  @id @default(cuid())
+  projectId String
+  url       String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectTranslation {
+  id        String  @id @default(cuid())
+  projectId String
+  lang      String
+  title     String
+  desc      String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@unique([projectId, lang])
+}

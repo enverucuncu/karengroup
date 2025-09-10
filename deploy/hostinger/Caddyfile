@@ -1,0 +1,9 @@
+# Caddyfile - otomatik Let's Encrypt TLS
+{
+  email you@example.com
+}
+
+aegistic.tr, www.aegistic.tr {
+  encode gzip
+  reverse_proxy web:3000
+}

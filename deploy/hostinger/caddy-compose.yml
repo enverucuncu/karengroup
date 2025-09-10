@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aegistic}
+      POSTGRES_USER: ${POSTGRES_USER:-aegistic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aegistic}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  web:
+    build: ..
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-aegistic}:${POSTGRES_PASSWORD:-aegistic}@db:5432/${POSTGRES_DB:-aegistic}
+      NODE_ENV: production
+    depends_on:
+      - db
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
