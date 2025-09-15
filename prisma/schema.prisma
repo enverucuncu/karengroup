@@ -1,24 +1,20 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"          // SQLite kullanıyorsan "sqlite" yap
-  url      = env("DATABASE_URL")   // İstersen DB_URL da yazabilirsin; env ile uyumlu olsun
+  provider = "postgresql"          // SQLite kullanıyorsan "sqlite"
+  url      = env("DATABASE_URL")
 }
 
-/* Modeller (örnek) */
 model Project {
-  id           Int      @id @default(autoincrement())
-  slug         String   @unique
-  coverUrl     String?
-  titleTr      String?
-  descTr       String?
-  photos       Photo[]
-  translations ProjectTranslation[]
-  @@map("projects") // tablo adı plural ise
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  coverUrl      String?
+  titleTr       String?
+  descTr        String?
+  photos        Photo[]
+  translations  ProjectTranslation[]
 }
 
 model Photo {
