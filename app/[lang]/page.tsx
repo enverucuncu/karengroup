@@ -5,10 +5,10 @@ import { prisma } from "@/src/lib/prisma";
 type PageProps = { params: { lang: string } };
 
 type LatestItem = {
-  titleTr: string;
-  descTr: string;
+  titleTr: string | null;
+  descTr: string | null;
   slug: string;
-  coverUrl: string;
+  coverUrl: string | null;
   createdAt: Date;
 };
 
@@ -44,17 +44,25 @@ export default async function Home({ params: { lang } }: PageProps) {
 
       <section className="features">
         <div className="container">
-          <div className="section-title" style={{ textAlign: "center", marginBottom: 60 }}>
+          <div
+            className="section-title"
+            style={{ textAlign: "center", marginBottom: 60 }}
+          >
             <h2>Why Choose AEGISTIC</h2>
             <p>We provide innovative security solutions tailored to your specific needs</p>
           </div>
 
           <div className="features-grid">
-            {latest.map((p: LatestItem, i: number) => (
-              <div key={i} className="card">
-                <div className="text-5xl mb-4" style={{ color: "var(--brand-primary)" }}>★</div>
-                <div className="h3">{p.titleTr}</div>
-                <p dangerouslySetInnerHTML={{ __html: p.descTr }} />
+            {latest.map((p) => (
+              <div key={p.slug} className="card">
+                <div className="text-5xl mb-4" style={{ color: "var(--brand-primary)" }}>
+                  ★
+                </div>
+                <div className="h3">{p.titleTr ?? ""}</div>
+                <p
+                  // descTr HTML içerebileceği için güvenli biçimde boş stringe düşür.
+                  dangerouslySetInnerHTML={{ __html: p.descTr ?? "" }}
+                />
               </div>
             ))}
           </div>
