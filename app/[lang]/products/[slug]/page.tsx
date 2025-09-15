@@ -1,23 +1,63 @@
-import { prisma } from '@/src/lib/prisma'
+// app/[lang]/products/[slug]/page.tsx
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/src/lib/prisma";
 
-export default async function ProductPage({ params:{ lang, slug } }:{ params:{ lang:string; slug:string } }){
-  const p = await prisma.product.findUnique({ where: { slug }, include: { photos: true, translations: true } })
-  if (!p) return <div className="container section">Not found</div>
-  const t = lang === 'tr' ? { title:p.titleTr, desc:p.descTr, specs:p.specsTr } : (p.translations.find(x=>x.lang===lang) ?? { title:p.titleTr, desc:p.descTr, specs:p.specsTr })
+type PageProps = { params: { lang: string; slug: string } };
+type TContent = { title: string; desc: string; specs: string };
+type ProductWithRels = Prisma.ProductGetPayload<{
+  include: { photos: true; translations: true };
+}>;
+
+export default async function ProductPage({ params: { lang, slug } }: PageProps) {
+  const p: ProductWithRels | null = await prisma.product.findUnique({
+    where: { slug },
+    include: { photos: true, translations: true },
+  });
+
+  if (!p) return <div className="container section">Not found</div>;
+
+  // TR ise TR alanları, değilse çevirilerden eşleşen dili çek
+  const match = p.translations.find(
+    (tr: ProductWithRels["translations"][number]) => tr.lang === lang
+  );
+
+  const t: TContent = match
+    ? { title: match.title, desc: match.desc, specs: match.specs }
+    : { title: p.titleTr, desc: p.descTr, specs: p.specsTr };
+
   return (
     <main className="container section">
       <h1 className="h1">{t.title}</h1>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={p.coverUrl} alt="" style={{maxHeight:400, width:'100%', objectFit:'contain', borderRadius:8}} />
-      <div className="grid gap-4 md:grid-cols-3 my-6">
-        {p.photos.map(ph => <img key={ph.id} src={ph.url} alt="" style={{borderRadius:8}} />)}
-      </div>
-      <section className="prose prose-invert max-w-none">
-        <h2 className="h2">Ürün Açıklaması</h2>
+
+      {/* Kapak görseli */}
+      {p.coverUrl && (
+        <div className="mb-6">
+          <img src={p.coverUrl} alt={t.title} style={{ width: "100%", height: "auto" }} />
+        </div>
+      )}
+
+      {/* Galeri */}
+      {p.photos?.length ? (
+        <div className="features-grid mb-8">
+          {p.photos.map((ph, i) => (
+            <div key={i} className="card">
+              <img src={ph.url} alt={`${t.title} - ${i + 1}`} style={{ width: "100%", height: "auto" }} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Açıklama */}
+      <section className="mb-10">
+        <h2 className="h3">Description</h2>
         <div dangerouslySetInnerHTML={{ __html: t.desc }} />
-        <h3 className="h3 mt-6">Teknik Özellikler</h3>
+      </section>
+
+      {/* Teknik Özellikler */}
+      <section>
+        <h2 className="h3">Technical Specs</h2>
         <div dangerouslySetInnerHTML={{ __html: t.specs }} />
       </section>
     </main>
-  )
+  );
 }
