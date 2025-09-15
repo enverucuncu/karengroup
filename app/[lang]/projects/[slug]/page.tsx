@@ -3,7 +3,6 @@ import { prisma } from "@/src/lib/prisma";
 
 type PageProps = { params: { lang: string; slug: string } };
 type TContent = { title: string; desc: string };
-
 const s = (v: string | null | undefined) => v ?? "";
 
 export default async function ProjectDetailPage({ params: { lang, slug } }: PageProps) {
@@ -14,7 +13,6 @@ export default async function ProjectDetailPage({ params: { lang, slug } }: Page
 
   if (!p) return <div className="container section">Not found</div>;
 
-  // find() callback'ındaki parametreyi tiplemek "implicitly has an 'any' type" hatasını çözer.
   const match = p.translations.find(
     (x: { lang: string; title: string | null; desc: string | null }) => x.lang === lang
   );
@@ -39,10 +37,9 @@ export default async function ProjectDetailPage({ params: { lang, slug } }: Page
 
       <div className="prose mt-6" dangerouslySetInnerHTML={{ __html: t.desc }} />
 
-      {/* Basit galeri */}
       {p.photos.length > 1 && (
         <div className="grid gap-3 mt-6 md:grid-cols-3">
-          {p.photos.slice(1).map((ph) => (
+          {p.photos.slice(1).map((ph: typeof p.photos[number]) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={ph.id} src={ph.url} alt="" style={{ width: "100%", borderRadius: 6 }} />
           ))}
