@@ -2,13 +2,18 @@
 import Link from "next/link";
 import { prisma } from "@/src/lib/prisma";
 
-type PageProps = {
-  params: { lang: string };
+type PageProps = { params: { lang: string } };
+
+type LatestItem = {
+  titleTr: string;
+  descTr: string;
+  slug: string;
+  coverUrl: string;
+  createdAt: Date;
 };
 
 export default async function Home({ params: { lang } }: PageProps) {
-  // Tip güvenli sorgu: alanları 'select' ile daraltıyoruz → TS, p'nin tipini bilir
-  const latest = await prisma.product.findMany({
+  const latest: LatestItem[] = await prisma.product.findMany({
     select: {
       titleTr: true,
       descTr: true,
@@ -45,11 +50,9 @@ export default async function Home({ params: { lang } }: PageProps) {
           </div>
 
           <div className="features-grid">
-            {latest.map((p, i) => (
+            {latest.map((p: LatestItem, i: number) => (
               <div key={i} className="card">
-                <div className="text-5xl mb-4" style={{ color: "var(--brand-primary)" }}>
-                  ★
-                </div>
+                <div className="text-5xl mb-4" style={{ color: "var(--brand-primary)" }}>★</div>
                 <div className="h3">{p.titleTr}</div>
                 <p dangerouslySetInnerHTML={{ __html: p.descTr }} />
               </div>
