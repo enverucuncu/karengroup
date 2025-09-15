@@ -13,7 +13,7 @@ type LatestItem = {
 };
 
 export default async function Home({ params: { lang } }: PageProps) {
-  const latest: LatestItem[] = await prisma.product.findMany({
+  const latest: LatestItem[] = await prisma.project.findMany({
     select: {
       titleTr: true,
       descTr: true,
