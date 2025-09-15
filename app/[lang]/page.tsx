@@ -1,8 +1,25 @@
-import Link from 'next/link'
-import { prisma } from '@/src/lib/prisma'
+// app/[lang]/page.tsx
+import Link from "next/link";
+import { prisma } from "@/src/lib/prisma";
 
-export default async function Home({ params:{ lang } }:{ params:{ lang:string } }){
-  const latest = await prisma.product.findMany({ take:3, orderBy:{ createdAt:'desc' } })
+type PageProps = {
+  params: { lang: string };
+};
+
+export default async function Home({ params: { lang } }: PageProps) {
+  // Tip güvenli sorgu: alanları 'select' ile daraltıyoruz → TS, p'nin tipini bilir
+  const latest = await prisma.product.findMany({
+    select: {
+      titleTr: true,
+      descTr: true,
+      slug: true,
+      coverUrl: true,
+      createdAt: true,
+    },
+    take: 3,
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
     <main>
       <section className="hero">
@@ -10,28 +27,36 @@ export default async function Home({ params:{ lang } }:{ params:{ lang:string } 
           <h1>Technology Leader in Security</h1>
           <p>Uninterrupted Protection with Durable and Aesthetic Solutions</p>
           <div>
-            <Link href={`/${lang}/products`} className="btn btn-primary">Explore Products</Link>
-            <Link href={`/${lang}/contact`} className="btn btn-ghost">Contact Us</Link>
+            <Link href={`/${lang}/products`} className="btn btn-primary">
+              Explore Products
+            </Link>
+            <Link href={`/${lang}/contact`} className="btn btn-ghost">
+              Contact Us
+            </Link>
           </div>
         </div>
       </section>
+
       <section className="features">
         <div className="container">
-          <div className="section-title" style={{textAlign:'center', marginBottom:60}}>
+          <div className="section-title" style={{ textAlign: "center", marginBottom: 60 }}>
             <h2>Why Choose AEGISTIC</h2>
             <p>We provide innovative security solutions tailored to your specific needs</p>
           </div>
+
           <div className="features-grid">
-            {latest.map((p,i)=>(
+            {latest.map((p, i) => (
               <div key={i} className="card">
-                <div className="text-5xl mb-4" style={{color:'var(--brand-primary)'}}>★</div>
+                <div className="text-5xl mb-4" style={{ color: "var(--brand-primary)" }}>
+                  ★
+                </div>
                 <div className="h3">{p.titleTr}</div>
-                <p dangerouslySetInnerHTML={{__html:p.descTr}} />
+                <p dangerouslySetInnerHTML={{ __html: p.descTr }} />
               </div>
             ))}
           </div>
         </div>
       </section>
     </main>
-  )
+  );
 }
