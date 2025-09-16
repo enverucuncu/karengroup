@@ -1,1 +1,14 @@
+[phases.install]
+cmds = [
+  "npm ci || npm install",
+  "npx prisma generate"
+]
+
+[phases.build]
+cmds = [
+  "npm run build"
+]
+
+[start]
+cmd = "npm run start"
 
