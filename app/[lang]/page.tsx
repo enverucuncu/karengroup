@@ -9,7 +9,7 @@ type LatestItem = {
   descTr: string | null;
   slug: string;
   coverUrl: string | null;
-  createdAt: Date;
+  createdAt: Date; // <-- bu alanı gerçekten seçiyoruz
 };
 
 export default async function Home({ params: { lang } }: PageProps) {
@@ -19,7 +19,7 @@ export default async function Home({ params: { lang } }: PageProps) {
       descTr: true,
       slug: true,
       coverUrl: true,
-      createdAt: true, // ⬅️ ZORUNLU
+      createdAt: true, // <-- ZORUNLU
     },
     take: 3,
     orderBy: { createdAt: "desc" },
