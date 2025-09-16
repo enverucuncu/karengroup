@@ -1,66 +1,101 @@
 // app/[lang]/products/[slug]/page.tsx
-import type { Prisma } from "@prisma/client";
+import { notFound } from "next/navigation";
+import Image from "next/image";
 import { prisma } from "@/src/lib/prisma";
+import { Prisma } from "@prisma/client";
 
-type PageProps = { params: { lang: string; slug: string } };
-type TContent = { title: string; desc: string; specs: string };
+type TContent = { title: string; desc: string; specs?: string };
 
-type ProductWithRels = Prisma.ProductGetPayload<{
+// Project modelinin ilişkileriyle birlikte tipini çıkarıyoruz
+type ProjectWithRels = Prisma.ProjectGetPayload<{
   include: { photos: true; translations: true };
 }>;
 
-const safe = (s: string | null | undefined) => s ?? "";
+type PageProps = {
+  params: { lang: string; slug: string };
+};
 
-export default async function ProductPage({ params: { lang, slug } }: PageProps) {
-  const p: ProductWithRels | null = await prisma.product.findUnique({
+function pickLocalizedContent(project: ProjectWithRels, lang: string): TContent {
+  // translations ilişkisinde dil eşleşiyorsa onu kullan
+  const tr = project.translations?.find((t: any) => t.lang === lang);
+  if (tr) {
+    return {
+      title: tr.title ?? project.titleTr ?? project.slug,
+      desc: tr.desc ?? project.descTr ?? "",
+      specs: tr.specs ?? undefined,
+    };
+  }
+  // fallback: modeldeki TR alanları
+  return {
+    title: project.titleTr ?? project.slug,
+    desc: project.descTr ?? "",
+  };
+}
+
+export default async function Page({ params: { lang, slug } }: PageProps) {
+  const project = await prisma.project.findUnique({
     where: { slug },
-    include: { photos: true, translations: true },
+    include: {
+      photos: true,
+      translations: true,
+    },
   });
 
-  if (!p) return <div className="container section">Not found</div>;
+  if (!project) return notFound();
 
-  const match = p.translations.find(
-    (tr: ProductWithRels["translations"][number]) => tr.lang === lang
-  );
-
-  const t: TContent =
-    lang === "tr"
-      ? { title: safe(p.titleTr), desc: safe(p.descTr), specs: safe(p.specsTr) }
-      : {
-          title: safe(match?.title ?? p.titleTr),
-          desc: safe(match?.desc ?? p.descTr),
-          specs: safe(match?.specs ?? p.specsTr),
-        };
+  const content = pickLocalizedContent(project, lang);
 
   return (
-    <main className="container section">
-      <h1 className="h1">{t.title}</h1>
+    <main className="mx-auto max-w-5xl px-4 py-10 space-y-8">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight">{content.title}</h1>
+        {content.desc && (
+          <p className="text-muted-foreground leading-relaxed">{content.desc}</p>
+        )}
+      </header>
 
-      {p.coverUrl && (
-        <div className="mb-6">
-          <img src={p.coverUrl} alt={t.title} style={{ width: "100%", height: "auto" }} />
+      {/* Kapak görseli veya ilk fotoğraf */}
+      {(project.coverUrl || project.photos?.[0]?.url) && (
+        <div className="relative aspect-[16/9] overflow-hidden rounded-2xl">
+          <Image
+            src={project.coverUrl || project.photos[0].url}
+            alt={content.title}
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
       )}
 
-      {p.photos?.length ? (
-        <div className="features-grid mb-8">
-          {p.photos.map((ph, i) => (
-            <div key={i} className="card">
-              <img src={ph.url} alt={`${t.title} - ${i + 1}`} style={{ width: "100%", height: "auto" }} />
+      {/* Specs varsa göster */}
+      {content.specs && (
+        <section className="prose dark:prose-invert max-w-none">
+          <h2>Özellikler</h2>
+          <pre className="whitespace-pre-wrap">{content.specs}</pre>
+        </section>
+      )}
+
+      {/* Fotoğraf galerisi */}
+      {project.photos && project.photos.length > 1 && (
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {project.photos.slice(1).map((p) => (
+            <div key={p.id} className="relative aspect-[4/3] overflow-hidden rounded-xl">
+              <Image
+                src={p.url}
+                alt={p.alt ?? content.title}
+                fill
+                className="object-cover"
+              />
             </div>
           ))}
-        </div>
-      ) : null}
-
-      <section className="mb-10">
-        <h2 className="h3">Description</h2>
-        <div dangerouslySetInnerHTML={{ __html: t.desc }} />
-      </section>
-
-      <section>
-        <h2 className="h3">Technical Specs</h2>
-        <div dangerouslySetInnerHTML={{ __html: t.specs }} />
-      </section>
+        </section>
+      )}
     </main>
   );
 }
+
+// (Opsiyonel) SSG/ISR düşünüyorsanız, aşağıdakileri ekleyebilirsiniz:
+// export async function generateStaticParams() {
+//   const slugs = await prisma.project.findMany({ select: { slug: true } });
+//   return slugs.map(({ slug }) => ({ slug, lang: "tr" })); // dillerinize göre çoğaltın
+// }
