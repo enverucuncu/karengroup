@@ -14,16 +14,16 @@ type LatestItem = {
 
 export default async function Home({ params: { lang } }: PageProps) {
   const latest: LatestItem[] = await prisma.project.findMany({
-  select: {
-    titleTr: true,
-    descTr: true,
-    slug: true,
-    coverUrl: true,
-    createdAt: true, // <-- gerekli
-  },
-  take: 3,
-  orderBy: { createdAt: "desc" },
-});
+    select: {
+      titleTr: true,
+      descTr: true,
+      slug: true,
+      coverUrl: true,
+      createdAt: true, // ⬅️ ZORUNLU
+    },
+    take: 3,
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <main>
@@ -50,10 +50,10 @@ export default async function Home({ params: { lang } }: PageProps) {
           </div>
 
           <div className="features-grid">
-            {latest.map((p: LatestItem, i: number) => (
-              <div key={i} className="card">
+            {latest.map((p, i) => (
+              <div key={p.slug ?? i} className="card">
                 <div className="text-5xl mb-4" style={{ color: "var(--brand-primary)" }}>★</div>
-                <div className="h3">{p.titleTr}</div>
+                <div className="h3">{p.titleTr ?? ""}</div>
                 <p dangerouslySetInnerHTML={{ __html: p.descTr ?? "" }} />
               </div>
             ))}
